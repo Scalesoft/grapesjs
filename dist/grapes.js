@@ -225,6 +225,10 @@ module.exports = _iterableToArray;
 /***/ (function(module, exports) {
 
 function _iterableToArrayLimit(arr, i) {
+  if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+    return;
+  }
+
   var _arr = [];
   var _n = true;
   var _d = false;
@@ -24615,9 +24619,9 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     }, // Mid x
     {
       type: 'y',
-      y: top + height / 2 // Mid y
-
-    }].map(function (item) {
+      y: top + height / 2
+    } // Mid y
+    ].map(function (item) {
       return _objectSpread({}, item, {
         origin: el,
         originRect: editor.Canvas.getElementPos(el),
@@ -29179,7 +29183,7 @@ var avoidInline = function avoidInline(em) {
  * @property {Boolean} [hoverable=true] Shows a highlight outline when hovering on the element if `true`. Default: `true`
  * @property {Boolean} [void=false] This property is used by the HTML exporter as void elements don't have closing tags, eg. `<br/>`, `<hr/>`, etc. Default: `false`
  * @property {String} [content=''] Content of the component (not escaped) which will be appended before children rendering. Default: `''`
- * @property {String} [icon=''] Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="far fa-square"></i>'. Default: `''`
+ * @property {String} [icon=''] Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="fa fa-square-o"></i>'. Default: `''`
  * @property {String|Function} [script=''] Component's javascript. More about it [here](/modules/Components-js.html). Default: `''`
  * @property {String|Function} [script-export=''] You can specify javascript available only in export functions (eg. when you get the HTML).
  * If this property is defined it will overwrite the `script` one (in export functions). Default: `''`
@@ -29188,7 +29192,7 @@ var avoidInline = function avoidInline(em) {
  *  For example if you create a component likes this: `{ removable: false, draggable: false, propagate: ['removable', 'draggable'] }`
  *  and append some new component inside, the new added component will get the exact same properties indicated in the `propagate` array (and the `propagate` property itself). Default: `[]`
  * @property {Array<Object>} [toolbar=null] Set an array of items to show up inside the toolbar when the component is selected (move, clone, delete).
- * Eg. `toolbar: [ { attributes: {class: 'fas fa-arrows-alt'}, command: 'tlb-move' }, ... ]`.
+ * Eg. `toolbar: [ { attributes: {class: 'fa fa-arrows'}, command: 'tlb-move' }, ... ]`.
  * By default, when `toolbar` property is falsy the editor will add automatically commands like `move`, `delete`, etc. based on its properties.
  * @property {Collection<Component>} [components=null] Children components. Default: `null`
  */
@@ -29292,6 +29296,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
     this.listenTo(this, 'change:script', this.scriptUpdated);
     this.listenTo(this, 'change:tagName', this.tagUpdated);
     this.listenTo(this, 'change:attributes', this.attrUpdated);
+    this.listenTo(this, 'change:attributes:id', this._idUpdated);
     this.set('status', ''); // Register global updates for collection properties
 
     ['classes', 'traits', 'components'].forEach(function (name) {
@@ -29442,9 +29447,25 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
    * Emit changes for each updated attribute
    * @private
    */
-  attrUpdated: function attrUpdated() {
-    this.setAttributes(this.get('attributes'), {
-      silent: 1
+  attrUpdated: function attrUpdated(m, v) {
+    var _this2 = this;
+
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    var attrs = this.get('attributes'); // Handle classes
+
+    var classes = attrs.class;
+    classes && this.setClass(classes);
+    delete attrs.class; // Handle style
+
+    var style = attrs.style;
+    style && this.setStyle(style);
+    delete attrs.style;
+
+    var attrPrev = _objectSpread({}, this.previous('attributes'));
+
+    var diff = Object(utils_mixins__WEBPACK_IMPORTED_MODULE_3__["shallowDiff"])(attrPrev, this.get('attributes'));
+    Object(underscore__WEBPACK_IMPORTED_MODULE_2__["keys"])(diff).forEach(function (pr) {
+      return _this2.trigger("change:attributes:".concat(pr), _this2, diff[pr], opts);
     });
   },
 
@@ -29456,26 +29477,8 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
    * component.setAttributes({ id: 'test', 'data-key': 'value' });
    */
   setAttributes: function setAttributes(attrs) {
-    var _this2 = this;
-
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    attrs = _objectSpread({}, attrs); // Handle classes
-
-    var classes = attrs.class;
-    classes && this.setClass(classes);
-    delete attrs.class; // Handle style
-
-    var style = attrs.style;
-    style && this.setStyle(style);
-    delete attrs.style;
-    this.set('attributes', attrs, opts);
-
-    var attrPrev = _objectSpread({}, this.previous('attributes'));
-
-    var diff = Object(utils_mixins__WEBPACK_IMPORTED_MODULE_3__["shallowDiff"])(attrPrev, attrs);
-    Object(underscore__WEBPACK_IMPORTED_MODULE_2__["keys"])(diff).forEach(function (pr) {
-      return _this2.trigger("change:attributes:".concat(pr), _this2, diff[pr]);
-    });
+    this.set('attributes', _objectSpread({}, attrs), opts);
     return this;
   },
 
@@ -29532,8 +29535,9 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
     var opt = this.opt;
 
     if (em && em.getConfig('avoidInlineStyle') && !opt.temporary) {
+      var style = this.get('style') || {};
       prop = Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isString"])(prop) ? this.parseStyle(prop) : prop;
-      prop = _objectSpread({}, prop, {}, this.get('style'));
+      prop = _objectSpread({}, prop, {}, style);
       var state = this.get('state');
       var cc = em.get('CssComposer');
       var propOrig = this.getStyle();
@@ -29800,7 +29804,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
       if (model.get('draggable')) {
         tb.push({
           attributes: {
-            class: "fas fa-arrows-alt ".concat(ppfx, "no-touch-actions"),
+            class: "fa fa-arrows ".concat(ppfx, "no-touch-actions"),
             draggable: true
           },
           //events: hasDnd(this.em) ? { dragstart: 'execCommand' } : '',
@@ -29820,7 +29824,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
       if (model.get('removable')) {
         tb.push({
           attributes: {
-            class: 'far fa-trash-alt'
+            class: 'fa fa-trash-o'
           },
           command: 'tlb-delete'
         });
@@ -30167,11 +30171,11 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
    * @param {String} id
    * @return {this}
    */
-  setId: function setId(id) {
+  setId: function setId(id, opts) {
     var attrs = _objectSpread({}, this.get('attributes'));
 
     attrs.id = id;
-    this.set('attributes', attrs);
+    this.set('attributes', attrs, opts);
     return this;
   },
 
@@ -30289,6 +30293,50 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
     var selector = rule && rule.get('selectors').at(0);
     selector && selector.set('name', newId);
     return this;
+  },
+  _getStyleRule: function _getStyleRule() {
+    var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+        id = _ref.id;
+
+    var em = this.em;
+    var idS = id || this.getId();
+    return em && em.get('CssComposer').getIdRule(idS);
+  },
+  _getStyleSelector: function _getStyleSelector(opts) {
+    var rule = this._getStyleRule(opts);
+
+    return rule && rule.get('selectors').at(0);
+  },
+  _idUpdated: function _idUpdated(m, v) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+    if (opts.idUpdate) return;
+    var ccid = this.ccid;
+
+    var _ref2 = this.get('attributes') || {},
+        id = _ref2.id;
+
+    var idPrev = (this.previous('attributes') || {}).id || ccid;
+    var list = Component.getList(this); // If the ID already exists I need to rollback to the old one
+
+    if (list[id]) {
+      return this.setId(idPrev, {
+        idUpdate: 1
+      });
+    } // Remove the old ID reference and add the new one
+
+
+    delete list[idPrev];
+    list[id] = this;
+    this.ccid = id; // Update the style selector name
+
+    var selector = this._getStyleSelector({
+      id: idPrev
+    });
+
+    selector && selector.set({
+      name: id,
+      label: id
+    });
   }
 }, {
   /**
@@ -30511,7 +30559,7 @@ var svgAttrs = 'xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 2
         if (!hasButtonBool) {
           tb.push({
             attributes: {
-              class: 'fas fa-pencil-alt'
+              class: 'fa fa-pencil'
             },
             command: cmdName
           });
@@ -31818,40 +31866,53 @@ var Component;
       });
     }
 
-    (Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isArray"])(models) ? models : [models]).filter(function (i) {
+    var isMult = Object(underscore__WEBPACK_IMPORTED_MODULE_3__["isArray"])(models);
+    models = (isMult ? models : [models]).filter(function (i) {
       return i;
-    }).forEach(function (model) {
+    }).map(function (model) {
       return _this.processDef(model);
     });
+    models = isMult ? models : models[0];
     return backbone__WEBPACK_IMPORTED_MODULE_2___default.a.Collection.prototype.add.apply(this, [models, opt]);
   },
 
   /**
    * Process component definition.
    */
-  processDef: function processDef(model) {
+  processDef: function processDef(mdl) {
+    // Avoid processing Models
+    if (mdl.cid && mdl.ccid) return mdl;
     var em = this.em,
         _this$config = this.config,
         config = _this$config === void 0 ? {} : _this$config;
     var processor = config.processor;
-    var modelPr = processor && processor(model);
+    var model = mdl;
 
-    if (modelPr) {
-      Object(underscore__WEBPACK_IMPORTED_MODULE_3__["each"])(model, function (val, key) {
-        return delete model[key];
-      });
-      Object(underscore__WEBPACK_IMPORTED_MODULE_3__["extend"])(model, modelPr);
-    } // React JSX
+    if (processor) {
+      model = _objectSpread({}, model); // Avoid 'Cannot delete property ...'
+
+      var modelPr = processor(model);
+
+      if (modelPr) {
+        Object(underscore__WEBPACK_IMPORTED_MODULE_3__["each"])(model, function (val, key) {
+          return delete model[key];
+        });
+        Object(underscore__WEBPACK_IMPORTED_MODULE_3__["extend"])(model, modelPr);
+      }
+    } // React JSX preset
 
 
     if (model.$$typeof && _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0___default()(model.props) == 'object') {
+      model = _objectSpread({}, model);
+      model.props = _objectSpread({}, model.props);
       var domc = em.get('DomComponents');
       var parser = em.get('Parser');
       var parserHtml = parser.parserHtml;
       Object(underscore__WEBPACK_IMPORTED_MODULE_3__["each"])(model, function (value, key) {
         if (!Object(underscore__WEBPACK_IMPORTED_MODULE_3__["includes"])(['props', 'type'], key)) delete model[key];
       });
-      var props = model.props;
+      var _model = model,
+          props = _model.props;
       var comps = props.children;
       delete props.children;
       delete model.props;
@@ -33015,14 +33076,14 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
     var defaultAttr = _objectSpread({
       'data-gjs-type': type || 'default'
-    }, draggableComponents && {
+    }, draggableComponents ? {
       draggable: true
-    }, {}, highlightable && {
+    } : {}, {}, highlightable ? {
       'data-highlightable': 1
-    }, {}, textable && {
+    } : {}, {}, textable ? {
       contenteditable: 'false',
       'data-gjs-textable': 'true'
-    }); // Remove all current attributes
+    } : {}); // Remove all current attributes
 
 
     Object(underscore__WEBPACK_IMPORTED_MODULE_2__["each"])(el.attributes, function (attr) {
@@ -33475,7 +33536,8 @@ var parseStyle = Object(parser_model_ParserHtml__WEBPACK_IMPORTED_MODULE_3__["de
    * @return {Object}
    */
   getStyle: function getStyle() {
-    return _objectSpread({}, this.get('style'));
+    var style = this.get('style') || {};
+    return _objectSpread({}, style);
   },
 
   /**
@@ -34426,7 +34488,8 @@ __webpack_require__.r(__webpack_exports__);
   // element's `style` attribute. Unfortunately, inline styling doesn't allow
   // use of media queries (@media) or even pseudo selectors (eg. :hover).
   // When `avoidInlineStyle` is true all styles are inserted inside the css rule
-  avoidInlineStyle: 0,
+  // @deprecated Don't use this option, we don't support inline styling anymore
+  avoidInlineStyle: 1,
   // Avoid default properties from storable JSON data, like `components` and `styles`.
   // With this option enabled your data will be smaller (usefull if need to
   // save some storage space)
@@ -34854,6 +34917,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     /**
      * Returns CSS built inside canvas
      * @param {Object} [opts={}] Options
+     * @param {Boolean} [opts.avoidProtected=false] Don't include protected CSS
      * @return {string} CSS string
      */
     getCss: function getCss(opts) {
@@ -36164,7 +36228,7 @@ var defaultConfig = {
   editors: editors,
   plugins: plugins,
   // Will be replaced on build
-  version: '<# VERSION #>',
+  version: '0.15.8',
 
   /**
    * Initialize the editor with passed options
@@ -37086,7 +37150,7 @@ var ItemsView;
     var name = model.getName();
     var icon = model.getIcon();
     var clsBase = "".concat(pfx, "layer");
-    return "\n      ".concat(hidable ? "<i class=\"".concat(pfx, "layer-vis fa fa-eye ").concat(this.isVisible() ? '' : 'fa-eye-slash', "\" data-toggle-visible></i>") : '', "\n      <div class=\"").concat(clsTitleC, "\">\n        <div class=\"").concat(clsTitle, "\" style=\"padding-left: ").concat(gut, "\" data-toggle-select>\n          <div class=\"").concat(pfx, "layer-title-inn\">\n            <i class=\"").concat(clsCaret, "\" data-toggle-open></i>\n            ").concat(icon ? "<span class=\"".concat(clsBase, "__icon\">").concat(icon, "</span>") : '', "\n            <span class=\"").concat(clsInput, "\" data-name>").concat(name, "</span>\n          </div>\n        </div>\n      </div>\n      <div class=\"").concat(this.clsCount, "\">").concat(count || '', "</div>\n      <div class=\"").concat(this.clsMove, "\" data-toggle-move>\n        <i class=\"fas fa-arrows-alt\"></i>\n      </div>\n      <div class=\"").concat(this.clsChildren, "\"></div>");
+    return "\n      ".concat(hidable ? "<i class=\"".concat(pfx, "layer-vis fa fa-eye ").concat(this.isVisible() ? '' : 'fa-eye-slash', "\" data-toggle-visible></i>") : '', "\n      <div class=\"").concat(clsTitleC, "\">\n        <div class=\"").concat(clsTitle, "\" style=\"padding-left: ").concat(gut, "\" data-toggle-select>\n          <div class=\"").concat(pfx, "layer-title-inn\">\n            <i class=\"").concat(clsCaret, "\" data-toggle-open></i>\n            ").concat(icon ? "<span class=\"".concat(clsBase, "__icon\">").concat(icon, "</span>") : '', "\n            <span class=\"").concat(clsInput, "\" data-name>").concat(name, "</span>\n          </div>\n        </div>\n      </div>\n      <div class=\"").concat(this.clsCount, "\">").concat(count || '', "</div>\n      <div class=\"").concat(this.clsMove, "\" data-toggle-move>\n        <i class=\"fa fa-arrows\"></i>\n      </div>\n      <div class=\"").concat(this.clsChildren, "\"></div>");
   },
   initialize: function initialize() {
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -37613,7 +37677,7 @@ var prv = 'preview';
     buttons: [{
       active: true,
       id: swv,
-      className: 'far fa-square',
+      className: 'fa fa-square-o',
       command: swv,
       context: swv,
       attributes: {
@@ -37629,7 +37693,7 @@ var prv = 'preview';
       }
     }, {
       id: ful,
-      className: 'fas fa-expand-arrows-alt',
+      className: 'fa fa-arrows-alt',
       command: ful,
       context: ful,
       attributes: {
@@ -40641,7 +40705,7 @@ var inputProp = 'contentEditable';
     var pfx = this.pfx;
     var ppfx = this.ppfx;
     var label = this.model.get('label') || '';
-    return "\n      <span id=\"".concat(pfx, "checkbox\" class=\"far\" data-tag-status></span>\n      <span id=\"").concat(pfx, "tag-label\" data-tag-name>").concat(label, "</span>\n      <span id=\"").concat(pfx, "close\" data-tag-remove>\n        &Cross;\n      </span>\n    ");
+    return "\n      <span id=\"".concat(pfx, "checkbox\" class=\"fa\" data-tag-status></span>\n      <span id=\"").concat(pfx, "tag-label\" data-tag-name>").concat(label, "</span>\n      <span id=\"").concat(pfx, "close\" data-tag-remove>\n        &Cross;\n      </span>\n    ");
   },
   events: {
     'click [data-tag-remove]': 'removeTag',
@@ -40739,8 +40803,8 @@ var inputProp = 'contentEditable';
   updateStatus: function updateStatus() {
     var model = this.model,
         $el = this.$el;
-    var chkOn = 'fa-check-square';
-    var chkOff = 'fa-square';
+    var chkOn = 'fa-check-square-o';
+    var chkOff = 'fa-square-o';
     var $chk = $el.find('[data-tag-status]');
 
     if (model.get('active')) {
@@ -41746,6 +41810,8 @@ __webpack_require__.r(__webpack_exports__);
   appendTo: '',
   // Text to show in case no element selected
   textNoElement: 'Select an element before using Style Manager',
+  // Text for layers
+  textLayer: 'Layer',
   // Hide the property in case it's not stylable for the
   // selected component (each component has 'stylable' property)
   hideNotStylable: true,
@@ -44257,9 +44323,10 @@ __webpack_require__.r(__webpack_exports__);
   },
   template: function template(model) {
     var pfx = this.pfx,
-        ppfx = this.ppfx;
-    var label = "Layer ".concat(model.get('index'));
-    return "\n      <div id=\"".concat(pfx, "move\" class=\"").concat(ppfx, "no-touch-actions\" data-move-layer>\n        <i class=\"fas fa-arrows-alt\"></i>\n      </div>\n      <div id=\"").concat(pfx, "label\">").concat(label, "</div>\n      <div id=\"").concat(pfx, "preview-box\">\n      \t<div id=\"").concat(pfx, "preview\" data-preview></div>\n      </div>\n      <div id=\"").concat(pfx, "close-layer\" class=\"").concat(pfx, "btn-close\" data-close-layer>\n        &Cross;\n      </div>\n      <div id=\"").concat(pfx, "inputs\" data-properties></div>\n      <div style=\"clear:both\"></div>\n    ");
+        ppfx = this.ppfx,
+        config = this.config;
+    var label = "".concat(config.textLayer, " ").concat(model.get('index'));
+    return "\n      <div id=\"".concat(pfx, "move\" class=\"").concat(ppfx, "no-touch-actions\" data-move-layer>\n        <i class=\"fa fa-arrows\"></i>\n      </div>\n      <div id=\"").concat(pfx, "label\">").concat(label, "</div>\n      <div id=\"").concat(pfx, "preview-box\">\n      \t<div id=\"").concat(pfx, "preview\" data-preview></div>\n      </div>\n      <div id=\"").concat(pfx, "close-layer\" class=\"").concat(pfx, "btn-close\" data-close-layer>\n        &Cross;\n      </div>\n      <div id=\"").concat(pfx, "inputs\" data-properties></div>\n      <div style=\"clear:both\"></div>\n    ");
   },
   initialize: function initialize() {
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -45420,8 +45487,8 @@ var clearProp = 'data-clear-style';
   },
   templateLabel: function templateLabel(model) {
     var pfx = this.pfx;
-    var icon = model.get('icon');
-    var info = model.get('info');
+    var icon = model.get('icon') || '';
+    var info = model.get('info') || '';
     var parent = model.parent;
     return "\n      <span class=\"".concat(pfx, "icon ").concat(icon, "\" title=\"").concat(info, "\">\n        ").concat(model.get('name'), "\n      </span>\n      ").concat(!parent ? "<b class=\"".concat(pfx, "clear\" ").concat(clearProp, ">&Cross;</b>") : '', "\n    ");
   },
