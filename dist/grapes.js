@@ -24531,12 +24531,10 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     var guidesEl = this.guidesEl;
 
     if (!guidesEl) {
-      var _editor = this.editor,
+      var editor = this.editor,
           em = this.em,
           opts = this.opts;
-
-      var pfx = _editor.getConfig('stylePrefix');
-
+      var pfx = editor.getConfig('stylePrefix');
       var elInfoX = document.createElement('div');
       var elInfoY = document.createElement('div');
       var guideContent = "<div class=\"".concat(pfx, "guide-info__line ").concat(pfx, "danger-bg\">\n        <div class=\"").concat(pfx, "guide-info__content ").concat(pfx, "danger-color\"></div>\n      </div>");
@@ -24548,9 +24546,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
       elInfoY.innerHTML = guideContent;
       guidesEl.appendChild(elInfoX);
       guidesEl.appendChild(elInfoY);
-
-      _editor.Canvas.getToolsEl().appendChild(guidesEl);
-
+      editor.Canvas.getToolsEl().appendChild(guidesEl);
       this.guidesEl = guidesEl;
       this.elGuideInfoX = elInfoX;
       this.elGuideInfoY = elInfoY;
@@ -24583,6 +24579,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     return this.getElementGuides(this.target.getEl());
   },
   updateGuides: function updateGuides(guides) {
+    var editor = this.editor;
     (guides || this.guides).forEach(function (item) {
       var origin = item.origin;
 
@@ -29312,7 +29309,7 @@ var avoidInline = function avoidInline(em) {
  * @property {Boolean} [hoverable=true] Shows a highlight outline when hovering on the element if `true`. Default: `true`
  * @property {Boolean} [void=false] This property is used by the HTML exporter as void elements don't have closing tags, eg. `<br/>`, `<hr/>`, etc. Default: `false`
  * @property {String} [content=''] Content of the component (not escaped) which will be appended before children rendering. Default: `''`
- * @property {String} [icon=''] Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="fa fa-square-o"></i>'. Default: `''`
+ * @property {String} [icon=''] Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="far fa-square"></i>'. Default: `''`
  * @property {String|Function} [script=''] Component's javascript. More about it [here](/modules/Components-js.html). Default: `''`
  * @property {String|Function} [script-export=''] You can specify javascript available only in export functions (eg. when you get the HTML).
  * If this property is defined it will overwrite the `script` one (in export functions). Default: `''`
@@ -29321,7 +29318,7 @@ var avoidInline = function avoidInline(em) {
  *  For example if you create a component likes this: `{ removable: false, draggable: false, propagate: ['removable', 'draggable'] }`
  *  and append some new component inside, the new added component will get the exact same properties indicated in the `propagate` array (and the `propagate` property itself). Default: `[]`
  * @property {Array<Object>} [toolbar=null] Set an array of items to show up inside the toolbar when the component is selected (move, clone, delete).
- * Eg. `toolbar: [ { attributes: {class: 'fa fa-arrows'}, command: 'tlb-move' }, ... ]`.
+ * Eg. `toolbar: [ { attributes: {class: 'fas fa-arrows-alt'}, command: 'tlb-move' }, ... ]`.
  * By default, when `toolbar` property is falsy the editor will add automatically commands like `move`, `delete`, etc. based on its properties.
  * @property {Collection<Component>} [components=null] Children components. Default: `null`
  */
@@ -29933,7 +29930,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
       if (model.get('draggable')) {
         tb.push({
           attributes: {
-            class: "fa fa-arrows ".concat(ppfx, "no-touch-actions"),
+            class: "fas fa-arrows-alt ".concat(ppfx, "no-touch-actions"),
             draggable: true
           },
           //events: hasDnd(this.em) ? { dragstart: 'execCommand' } : '',
@@ -29953,7 +29950,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
       if (model.get('removable')) {
         tb.push({
           attributes: {
-            class: 'fa fa-trash-o'
+            class: 'far fa-trash-alt'
           },
           command: 'tlb-delete'
         });
@@ -30694,7 +30691,7 @@ var svgAttrs = 'xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 2
         if (!hasButtonBool) {
           tb.push({
             attributes: {
-              class: 'fa fa-pencil'
+              class: 'fas fa-pencil-alt'
             },
             command: cmdName
           });
@@ -34678,6 +34675,8 @@ __webpack_require__.r(__webpack_exports__);
   // 'translate' - Use translate CSS from transform property
   // To get more about this feature read: https://github.com/artf/grapesjs/issues/1936
   dragMode: 0,
+  // Import asynchronously CSS to use as icons
+  cssIcons: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css',
   // Dom element
   el: '',
   // Configurations for I18n
@@ -35780,10 +35779,10 @@ var logs = {
     }
 
     if (Mod.storageKey && Mod.store && Mod.load && sm) {
-      cfg.stm = sm;
-      var storables = this.get('storables');
-      storables.push(Mod);
-      this.set('storables', storables);
+      cfg.stm = sm; // DomComponents should be load before CSS Composer
+
+      var mth = name == 'domComponents' ? 'unshift' : 'push';
+      this.get('storables')[mth](Mod);
     }
 
     cfg.em = this;
@@ -36125,17 +36124,16 @@ var logs = {
   getCacheLoad: function getCacheLoad(force, clb) {
     var _this10 = this;
 
-    var f = force ? 1 : 0;
-    if (this.cacheLoad && !f) return this.cacheLoad;
+    if (this.cacheLoad && !force) return this.cacheLoad;
     var sm = this.get('StorageManager');
     var load = [];
     if (!sm) return {};
     this.get('storables').forEach(function (m) {
       var key = m.storageKey;
-      key = typeof key === 'function' ? key() : key;
-      var keys = key instanceof Array ? key : [key];
+      key = Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isFunction"])(key) ? key() : key;
+      var keys = Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isArray"])(key) ? key : [key];
       keys.forEach(function (k) {
-        load.push(k);
+        return load.push(k);
       });
     });
     sm.load(load, function (res) {
@@ -36143,7 +36141,7 @@ var logs = {
       clb && clb(res);
       setTimeout(function () {
         return _this10.trigger('storage:load', res);
-      }, 0);
+      });
     });
   },
 
@@ -36347,6 +36345,8 @@ var logs = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! backbone */ "./node_modules/backbone/backbone.js");
 /* harmony import */ var backbone__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(backbone__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var utils_mixins__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! utils/mixins */ "./src/utils/mixins.js");
+
 
 var $ = backbone__WEBPACK_IMPORTED_MODULE_0___default.a.$;
 /* harmony default export */ __webpack_exports__["default"] = (backbone__WEBPACK_IMPORTED_MODULE_0___default.a.View.extend({
@@ -36369,18 +36369,22 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_0___default.a.$;
     });
   },
   render: function render() {
-    var model = this.model;
-    var el = this.$el;
-    var conf = this.conf;
-    var contEl = $(conf.el || "body ".concat(conf.container));
+    var model = this.model,
+        $el = this.$el,
+        conf = this.conf;
     var pfx = conf.stylePrefix;
-    el.empty();
+    var contEl = $(conf.el || "body ".concat(conf.container));
+    Object(utils_mixins__WEBPACK_IMPORTED_MODULE_1__["appendStyles"])(conf.cssIcons, {
+      unique: 1,
+      prepand: 1
+    });
+    $el.empty();
     if (conf.width) contEl.css('width', conf.width);
     if (conf.height) contEl.css('height', conf.height);
-    el.append(model.get('Canvas').render());
-    el.append(this.pn.render());
-    el.attr('class', "".concat(pfx, "editor ").concat(pfx, "one-bg ").concat(pfx, "two-color"));
-    contEl.addClass("".concat(pfx, "editor-cont")).empty().append(el);
+    $el.append(model.get('Canvas').render());
+    $el.append(this.pn.render());
+    $el.attr('class', "".concat(pfx, "editor ").concat(pfx, "one-bg ").concat(pfx, "two-color"));
+    contEl.addClass("".concat(pfx, "editor-cont")).empty().append($el);
     return this;
   }
 }));
@@ -36802,7 +36806,7 @@ var traitInputAttr = {
       // In a trait like select, these are used to translate option names
       options: {
         target: {
-          '': 'This window',
+          false: 'This window',
           _blank: 'New window'
         }
       }
@@ -36857,7 +36861,7 @@ var defaultConfig = {
   editors: editors,
   plugins: plugins,
   // Will be replaced on build
-  version: '0.15.8',
+  version: '<# VERSION #>',
 
   /**
    * Initialize the editor with passed options
@@ -37779,7 +37783,7 @@ var ItemsView;
     var name = model.getName();
     var icon = model.getIcon();
     var clsBase = "".concat(pfx, "layer");
-    return "\n      ".concat(hidable ? "<i class=\"".concat(pfx, "layer-vis fa fa-eye ").concat(this.isVisible() ? '' : 'fa-eye-slash', "\" data-toggle-visible></i>") : '', "\n      <div class=\"").concat(clsTitleC, "\">\n        <div class=\"").concat(clsTitle, "\" style=\"padding-left: ").concat(gut, "\" data-toggle-select>\n          <div class=\"").concat(pfx, "layer-title-inn\">\n            <i class=\"").concat(clsCaret, "\" data-toggle-open></i>\n            ").concat(icon ? "<span class=\"".concat(clsBase, "__icon\">").concat(icon, "</span>") : '', "\n            <span class=\"").concat(clsInput, "\" data-name>").concat(name, "</span>\n          </div>\n        </div>\n      </div>\n      <div class=\"").concat(this.clsCount, "\">").concat(count || '', "</div>\n      <div class=\"").concat(this.clsMove, "\" data-toggle-move>\n        <i class=\"fa fa-arrows\"></i>\n      </div>\n      <div class=\"").concat(this.clsChildren, "\"></div>");
+    return "\n      ".concat(hidable ? "<i class=\"".concat(pfx, "layer-vis fa fa-eye ").concat(this.isVisible() ? '' : 'fa-eye-slash', "\" data-toggle-visible></i>") : '', "\n      <div class=\"").concat(clsTitleC, "\">\n        <div class=\"").concat(clsTitle, "\" style=\"padding-left: ").concat(gut, "\" data-toggle-select>\n          <div class=\"").concat(pfx, "layer-title-inn\">\n            <i class=\"").concat(clsCaret, "\" data-toggle-open></i>\n            ").concat(icon ? "<span class=\"".concat(clsBase, "__icon\">").concat(icon, "</span>") : '', "\n            <span class=\"").concat(clsInput, "\" data-name>").concat(name, "</span>\n          </div>\n        </div>\n      </div>\n      <div class=\"").concat(this.clsCount, "\" data-count>").concat(count || '', "</div>\n      <div class=\"").concat(this.clsMove, "\" data-toggle-move>\n        <i class=\"fas fa-arrows-alt\"></i>\n      </div>\n      <div class=\"").concat(this.clsChildren, "\"></div>");
   },
   initialize: function initialize() {
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -38023,24 +38027,20 @@ var ItemsView;
    * @return void
    * */
   checkChildren: function checkChildren() {
-    var model = this.model;
+    var model = this.model,
+        clsNoChild = this.clsNoChild;
     var count = this.countChildren(model);
-    var pfx = this.pfx;
-    var noChildCls = this.clsNoChild;
     var title = this.$el.children(".".concat(this.clsTitleC)).children(".".concat(this.clsTitle));
+    var cnt = this.cnt;
 
-    if (!this.cnt) {
-      this.cnt = this.$el.children(".".concat(this.clsCount));
+    if (!cnt) {
+      cnt = this.$el.children('[data-count]').get(0);
+      this.cnt = cnt;
     }
 
-    if (count) {
-      title.removeClass(noChildCls);
-      this.cnt.html(count);
-    } else {
-      title.addClass(noChildCls);
-      this.cnt.empty();
-      model.set('open', 0);
-    }
+    title[count ? 'removeClass' : 'addClass'](clsNoChild);
+    if (cnt) cnt.innerHTML = count || '';
+    !count && model.set('open', 0);
   },
 
   /**
@@ -38306,7 +38306,7 @@ var prv = 'preview';
     buttons: [{
       active: true,
       id: swv,
-      className: 'fa fa-square-o',
+      className: 'far fa-square',
       command: swv,
       context: swv,
       attributes: {
@@ -38322,7 +38322,7 @@ var prv = 'preview';
       }
     }, {
       id: ful,
-      className: 'fa fa-arrows-alt',
+      className: 'fas fa-expand-arrows-alt',
       command: ful,
       context: ful,
       attributes: {
@@ -41334,7 +41334,7 @@ var inputProp = 'contentEditable';
     var pfx = this.pfx,
         model = this.model;
     var label = model.get('label') || '';
-    return "\n      <span id=\"".concat(pfx, "checkbox\" class=\"fa\" data-tag-status></span>\n      <span id=\"").concat(pfx, "tag-label\" data-tag-name>").concat(label, "</span>\n      <span id=\"").concat(pfx, "close\" data-tag-remove>\n        &Cross;\n      </span>\n    ");
+    return "\n      <span id=\"".concat(pfx, "checkbox\" class=\"far\" data-tag-status></span>\n      <span id=\"").concat(pfx, "tag-label\" data-tag-name>").concat(label, "</span>\n      <span id=\"").concat(pfx, "close\" data-tag-remove>\n        &Cross;\n      </span>\n    ");
   },
   events: {
     'click [data-tag-remove]': 'removeTag',
@@ -41432,8 +41432,8 @@ var inputProp = 'contentEditable';
   updateStatus: function updateStatus() {
     var model = this.model,
         $el = this.$el;
-    var chkOn = 'fa-check-square-o';
-    var chkOff = 'fa-square-o';
+    var chkOn = 'fa-check-square';
+    var chkOff = 'fa-square';
     var $chk = $el.find('[data-tag-status]');
 
     if (model.get('active')) {
@@ -44957,7 +44957,7 @@ __webpack_require__.r(__webpack_exports__);
         ppfx = this.ppfx,
         em = this.em;
     var label = "".concat(em && em.t('styleManager.layer'), " ").concat(model.get('index'));
-    return "\n      <div id=\"".concat(pfx, "move\" class=\"").concat(ppfx, "no-touch-actions\" data-move-layer>\n        <i class=\"fa fa-arrows\"></i>\n      </div>\n      <div id=\"").concat(pfx, "label\">").concat(label, "</div>\n      <div id=\"").concat(pfx, "preview-box\">\n      \t<div id=\"").concat(pfx, "preview\" data-preview></div>\n      </div>\n      <div id=\"").concat(pfx, "close-layer\" class=\"").concat(pfx, "btn-close\" data-close-layer>\n        &Cross;\n      </div>\n      <div id=\"").concat(pfx, "inputs\" data-properties></div>\n      <div style=\"clear:both\"></div>\n    ");
+    return "\n      <div id=\"".concat(pfx, "move\" class=\"").concat(ppfx, "no-touch-actions\" data-move-layer>\n        <i class=\"fas fa-arrows-alt\"></i>\n      </div>\n      <div id=\"").concat(pfx, "label\">").concat(label, "</div>\n      <div id=\"").concat(pfx, "preview-box\">\n      \t<div id=\"").concat(pfx, "preview\" data-preview></div>\n      </div>\n      <div id=\"").concat(pfx, "close-layer\" class=\"").concat(pfx, "btn-close\" data-close-layer>\n        &Cross;\n      </div>\n      <div id=\"").concat(pfx, "inputs\" data-properties></div>\n      <div style=\"clear:both\"></div>\n    ");
   },
   initialize: function initialize() {
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -46993,7 +46993,7 @@ __webpack_require__.r(__webpack_exports__);
   appendTo: '',
   // Default options for the target input
   optionsTarget: [{
-    value: ''
+    value: false
   }, {
     value: '_blank'
   }]
@@ -47186,13 +47186,20 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
     var target = this.target;
     var name = this.get('name');
     if (Object(underscore__WEBPACK_IMPORTED_MODULE_2__["isUndefined"])(value)) return;
+    var valueToSet = value;
+
+    if (value === 'false') {
+      valueToSet = false;
+    } else if (value === 'true') {
+      valueToSet = true;
+    }
 
     if (this.get('changeProp')) {
-      target.set(name, value, opts);
+      target.set(name, valueToSet, opts);
     } else {
       var attrs = _objectSpread({}, target.get('attributes'));
 
-      attrs[name] = value;
+      attrs[name] = valueToSet;
       target.set('attributes', attrs, opts);
     }
   },
@@ -47651,7 +47658,7 @@ var $ = backbone__WEBPACK_IMPORTED_MODULE_0___default.a.$;
       });
       input += '</select>';
       this.$input = $(input);
-      var val = model.getTargetValue() || model.get('value');
+      var val = model.getTargetValue();
       !Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isUndefined"])(val) && this.$input.val(val);
     }
 
@@ -51195,7 +51202,9 @@ function () {
       this.counter = 0;
       this.over = 0;
       dragStop && dragStop(cancel);
-      em.runDefault();
+      em.runDefault({
+        preserveSelected: 1
+      });
       em.trigger('canvas:dragend', ev);
     }
   }, {
@@ -53616,7 +53625,7 @@ __webpack_require__.r(__webpack_exports__);
 /*!*****************************!*\
   !*** ./src/utils/mixins.js ***!
   \*****************************/
-/*! exports provided: isCommentNode, isTaggableNode, on, off, hasDnd, upFirst, matches, getModel, getElRect, camelCase, isTextNode, getKeyCode, getKeyChar, isEscKey, getElement, shallowDiff, normalizeFloat, getPointerEvent, getUnitFromValue, capitalize */
+/*! exports provided: isCommentNode, isTaggableNode, on, off, hasDnd, upFirst, matches, getModel, getElRect, camelCase, isTextNode, getKeyCode, getKeyChar, isEscKey, getElement, shallowDiff, normalizeFloat, getPointerEvent, getUnitFromValue, capitalize, appendStyles */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -53641,11 +53650,44 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getPointerEvent", function() { return getPointerEvent; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getUnitFromValue", function() { return getUnitFromValue; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "capitalize", function() { return capitalize; });
-/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
-/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(underscore__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "appendStyles", function() { return appendStyles; });
+/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/toConsumableArray.js");
+/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! underscore */ "./node_modules/underscore/underscore.js");
+/* harmony import */ var underscore__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(underscore__WEBPACK_IMPORTED_MODULE_1__);
+
 
 var elProt = window.Element.prototype;
 var matches = elProt.matches || elProt.webkitMatchesSelector || elProt.mozMatchesSelector || elProt.msMatchesSelector;
+/**
+ * Import styles asynchronously
+ * @param {String|Array<String>} styles
+ */
+
+var appendStyles = function appendStyles(styles) {
+  var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var stls = Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isArray"])(styles) ? _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0___default()(styles) : [styles];
+
+  if (stls.length) {
+    var href = stls.shift();
+
+    if (!opts.unique || !document.querySelector("link[href=\"".concat(href, "\"]"))) {
+      var _document = document,
+          head = _document.head;
+      var link = document.createElement('link');
+      link.href = href;
+      link.rel = 'stylesheet';
+
+      if (opts.prepand) {
+        head.insertBefore(link, head.firstChild);
+      } else {
+        head.appendChild(link);
+      }
+    }
+
+    appendStyles(stls);
+  }
+};
 /**
  * Returns shallow diff between 2 objects
  * @param  {Object} objOrig
@@ -53658,9 +53700,10 @@ var matches = elProt.matches || elProt.webkitMatchesSelector || elProt.mozMatche
  * // -> {baz: 2, faz: null, bar: ''};
  */
 
+
 var shallowDiff = function shallowDiff(objOrig, objNew) {
   var result = {};
-  var keysNew = Object(underscore__WEBPACK_IMPORTED_MODULE_0__["keys"])(objNew);
+  var keysNew = Object(underscore__WEBPACK_IMPORTED_MODULE_1__["keys"])(objNew);
 
   for (var prop in objOrig) {
     if (objOrig.hasOwnProperty(prop)) {
@@ -53679,7 +53722,7 @@ var shallowDiff = function shallowDiff(objOrig, objNew) {
 
   for (var _prop in objNew) {
     if (objNew.hasOwnProperty(_prop)) {
-      if (Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isUndefined"])(objOrig[_prop])) {
+      if (Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isUndefined"])(objOrig[_prop])) {
         result[_prop] = objNew[_prop];
       }
     }
@@ -53757,7 +53800,7 @@ var hasDnd = function hasDnd(em) {
 
 
 var getElement = function getElement(el) {
-  if (Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isElement"])(el) || isTextNode(el)) {
+  if (Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isElement"])(el) || isTextNode(el)) {
     return el;
   } else if (el && el.getEl) {
     return el.getEl();
@@ -53800,7 +53843,7 @@ var isTaggableNode = function isTaggableNode(el) {
 
 var getModel = function getModel(el, $) {
   var model = el;
-  Object(underscore__WEBPACK_IMPORTED_MODULE_0__["isElement"])(el) && (model = $(el).data('model'));
+  Object(underscore__WEBPACK_IMPORTED_MODULE_1__["isElement"])(el) && (model = $(el).data('model'));
   return model;
 };
 
