@@ -29309,7 +29309,7 @@ var avoidInline = function avoidInline(em) {
  * @property {Boolean} [hoverable=true] Shows a highlight outline when hovering on the element if `true`. Default: `true`
  * @property {Boolean} [void=false] This property is used by the HTML exporter as void elements don't have closing tags, eg. `<br/>`, `<hr/>`, etc. Default: `false`
  * @property {String} [content=''] Content of the component (not escaped) which will be appended before children rendering. Default: `''`
- * @property {String} [icon=''] Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="fa fa-square-o"></i>'. Default: `''`
+ * @property {String} [icon=''] Component's icon, this string will be inserted before the name (in Layers and badge), eg. it can be an HTML string '<i class="far fa-square"></i>'. Default: `''`
  * @property {String|Function} [script=''] Component's javascript. More about it [here](/modules/Components-js.html). Default: `''`
  * @property {String|Function} [script-export=''] You can specify javascript available only in export functions (eg. when you get the HTML).
  * If this property is defined it will overwrite the `script` one (in export functions). Default: `''`
@@ -29318,7 +29318,7 @@ var avoidInline = function avoidInline(em) {
  *  For example if you create a component likes this: `{ removable: false, draggable: false, propagate: ['removable', 'draggable'] }`
  *  and append some new component inside, the new added component will get the exact same properties indicated in the `propagate` array (and the `propagate` property itself). Default: `[]`
  * @property {Array<Object>} [toolbar=null] Set an array of items to show up inside the toolbar when the component is selected (move, clone, delete).
- * Eg. `toolbar: [ { attributes: {class: 'fa fa-arrows'}, command: 'tlb-move' }, ... ]`.
+ * Eg. `toolbar: [ { attributes: {class: 'fas fa-arrows-alt'}, command: 'tlb-move' }, ... ]`.
  * By default, when `toolbar` property is falsy the editor will add automatically commands like `move`, `delete`, etc. based on its properties.
  * @property {Collection<Component>} [components=null] Children components. Default: `null`
  */
@@ -29930,7 +29930,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
       if (model.get('draggable')) {
         tb.push({
           attributes: {
-            class: "fa fa-arrows ".concat(ppfx, "no-touch-actions"),
+            class: "fas fa-arrows-alt ".concat(ppfx, "no-touch-actions"),
             draggable: true
           },
           //events: hasDnd(this.em) ? { dragstart: 'execCommand' } : '',
@@ -29950,7 +29950,7 @@ var Component = backbone__WEBPACK_IMPORTED_MODULE_5___default.a.Model.extend(dom
       if (model.get('removable')) {
         tb.push({
           attributes: {
-            class: 'fa fa-trash-o'
+            class: 'far fa-trash-alt'
           },
           command: 'tlb-delete'
         });
@@ -30691,7 +30691,7 @@ var svgAttrs = 'xmlns="http://www.w3.org/2000/svg" width="100" viewBox="0 0 24 2
         if (!hasButtonBool) {
           tb.push({
             attributes: {
-              class: 'fa fa-pencil'
+              class: 'fas fa-pencil-alt'
             },
             command: cmdName
           });
@@ -34676,7 +34676,7 @@ __webpack_require__.r(__webpack_exports__);
   // To get more about this feature read: https://github.com/artf/grapesjs/issues/1936
   dragMode: 0,
   // Import asynchronously CSS to use as icons
-  cssIcons: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css',
+  cssIcons: 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css',
   // Dom element
   el: '',
   // Configurations for I18n
@@ -36861,7 +36861,7 @@ var defaultConfig = {
   editors: editors,
   plugins: plugins,
   // Will be replaced on build
-  version: '0.15.9',
+  version: '<# VERSION #>',
 
   /**
    * Initialize the editor with passed options
@@ -37783,7 +37783,7 @@ var ItemsView;
     var name = model.getName();
     var icon = model.getIcon();
     var clsBase = "".concat(pfx, "layer");
-    return "\n      ".concat(hidable ? "<i class=\"".concat(pfx, "layer-vis fa fa-eye ").concat(this.isVisible() ? '' : 'fa-eye-slash', "\" data-toggle-visible></i>") : '', "\n      <div class=\"").concat(clsTitleC, "\">\n        <div class=\"").concat(clsTitle, "\" style=\"padding-left: ").concat(gut, "\" data-toggle-select>\n          <div class=\"").concat(pfx, "layer-title-inn\">\n            <i class=\"").concat(clsCaret, "\" data-toggle-open></i>\n            ").concat(icon ? "<span class=\"".concat(clsBase, "__icon\">").concat(icon, "</span>") : '', "\n            <span class=\"").concat(clsInput, "\" data-name>").concat(name, "</span>\n          </div>\n        </div>\n      </div>\n      <div class=\"").concat(this.clsCount, "\" data-count>").concat(count || '', "</div>\n      <div class=\"").concat(this.clsMove, "\" data-toggle-move>\n        <i class=\"fa fa-arrows\"></i>\n      </div>\n      <div class=\"").concat(this.clsChildren, "\"></div>");
+    return "\n      ".concat(hidable ? "<i class=\"".concat(pfx, "layer-vis fa fa-eye ").concat(this.isVisible() ? '' : 'fa-eye-slash', "\" data-toggle-visible></i>") : '', "\n      <div class=\"").concat(clsTitleC, "\">\n        <div class=\"").concat(clsTitle, "\" style=\"padding-left: ").concat(gut, "\" data-toggle-select>\n          <div class=\"").concat(pfx, "layer-title-inn\">\n            <i class=\"").concat(clsCaret, "\" data-toggle-open></i>\n            ").concat(icon ? "<span class=\"".concat(clsBase, "__icon\">").concat(icon, "</span>") : '', "\n            <span class=\"").concat(clsInput, "\" data-name>").concat(name, "</span>\n          </div>\n        </div>\n      </div>\n      <div class=\"").concat(this.clsCount, "\" data-count>").concat(count || '', "</div>\n      <div class=\"").concat(this.clsMove, "\" data-toggle-move>\n        <i class=\"fas fa-arrows-alt\"></i>\n      </div>\n      <div class=\"").concat(this.clsChildren, "\"></div>");
   },
   initialize: function initialize() {
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -38306,7 +38306,7 @@ var prv = 'preview';
     buttons: [{
       active: true,
       id: swv,
-      className: 'fa fa-square-o',
+      className: 'far fa-square',
       command: swv,
       context: swv,
       attributes: {
@@ -38322,7 +38322,7 @@ var prv = 'preview';
       }
     }, {
       id: ful,
-      className: 'fa fa-arrows-alt',
+      className: 'fas fa-expand-arrows-alt',
       command: ful,
       context: ful,
       attributes: {
@@ -41334,7 +41334,7 @@ var inputProp = 'contentEditable';
     var pfx = this.pfx,
         model = this.model;
     var label = model.get('label') || '';
-    return "\n      <span id=\"".concat(pfx, "checkbox\" class=\"fa\" data-tag-status></span>\n      <span id=\"").concat(pfx, "tag-label\" data-tag-name>").concat(label, "</span>\n      <span id=\"").concat(pfx, "close\" data-tag-remove>\n        &Cross;\n      </span>\n    ");
+    return "\n      <span id=\"".concat(pfx, "checkbox\" class=\"far\" data-tag-status></span>\n      <span id=\"").concat(pfx, "tag-label\" data-tag-name>").concat(label, "</span>\n      <span id=\"").concat(pfx, "close\" data-tag-remove>\n        &Cross;\n      </span>\n    ");
   },
   events: {
     'click [data-tag-remove]': 'removeTag',
@@ -41432,8 +41432,8 @@ var inputProp = 'contentEditable';
   updateStatus: function updateStatus() {
     var model = this.model,
         $el = this.$el;
-    var chkOn = 'fa-check-square-o';
-    var chkOff = 'fa-square-o';
+    var chkOn = 'fa-check-square';
+    var chkOff = 'fa-square';
     var $chk = $el.find('[data-tag-status]');
 
     if (model.get('active')) {
@@ -44957,7 +44957,7 @@ __webpack_require__.r(__webpack_exports__);
         ppfx = this.ppfx,
         em = this.em;
     var label = "".concat(em && em.t('styleManager.layer'), " ").concat(model.get('index'));
-    return "\n      <div id=\"".concat(pfx, "move\" class=\"").concat(ppfx, "no-touch-actions\" data-move-layer>\n        <i class=\"fa fa-arrows\"></i>\n      </div>\n      <div id=\"").concat(pfx, "label\">").concat(label, "</div>\n      <div id=\"").concat(pfx, "preview-box\">\n      \t<div id=\"").concat(pfx, "preview\" data-preview></div>\n      </div>\n      <div id=\"").concat(pfx, "close-layer\" class=\"").concat(pfx, "btn-close\" data-close-layer>\n        &Cross;\n      </div>\n      <div id=\"").concat(pfx, "inputs\" data-properties></div>\n      <div style=\"clear:both\"></div>\n    ");
+    return "\n      <div id=\"".concat(pfx, "move\" class=\"").concat(ppfx, "no-touch-actions\" data-move-layer>\n        <i class=\"fas fa-arrows-alt\"></i>\n      </div>\n      <div id=\"").concat(pfx, "label\">").concat(label, "</div>\n      <div id=\"").concat(pfx, "preview-box\">\n      \t<div id=\"").concat(pfx, "preview\" data-preview></div>\n      </div>\n      <div id=\"").concat(pfx, "close-layer\" class=\"").concat(pfx, "btn-close\" data-close-layer>\n        &Cross;\n      </div>\n      <div id=\"").concat(pfx, "inputs\" data-properties></div>\n      <div style=\"clear:both\"></div>\n    ");
   },
   initialize: function initialize() {
     var o = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
